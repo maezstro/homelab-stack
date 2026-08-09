@@ -33,17 +33,23 @@ downloads, a reverse proxy, and a recipe manager.
 
 1. Copy `.env.example` to `.env` and fill in real values:
 
+```
 cp .env.example .env
+```
 
 2. Review `compose/docker-compose.yml` and adjust volume paths to match your
    own NAS/storage layout
 3. Bring up the main stack:
 
+```
 docker compose -f compose/docker-compose.yml up -d
+```
 
 4. Bring up Mealie separately:
 
+```
 docker compose -f compose/mealie-docker-compose.yaml up -d
+```
 
 
 ## Backups
