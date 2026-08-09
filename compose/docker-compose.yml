@@ -1,0 +1,333 @@
+
+services:
+
+#################
+# RADARR
+#################
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    network_mode: "service:gluetun"
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    privileged: true
+    group_add:
+      - "44"
+      - "992"
+    volumes:
+      - /media/arr/radarr/config:/config
+      - /mnt/nas/media/Movies:/movies
+      - /mnt/nas/downloads:/downloads
+      - /mnt/nas/media2/Movies2:/movies2
+      - /mnt/nas/downloads2:/downloads2
+    restart: unless-stopped
+
+#################
+# SONARR
+#################
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    network_mode: "service:gluetun"
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /media/arr/sonarr/config:/config
+      - /mnt/nas/media/Shows:/tv
+      - /mnt/nas/downloads:/downloads
+      - /mnt/nas/media2/Shows2:/tv2
+      - /mnt/nas/downloads2:/downloads2
+      - /mnt/nas/media/anime:/anime
+      - /mnt/nas/media2/anime2:/anime2
+    restart: unless-stopped
+
+#################
+# PROWLARR
+#################
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    network_mode: "service:gluetun"
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /media/arr/prowlarr/config:/config
+    restart: unless-stopped
+
+#################
+# QBITTORRENT
+#################
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    network_mode: "service:gluetun"
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - WEBUI_PORT=8080
+      - TORRENTING_PORT=6881
+    volumes:
+      - /media/arr/qbittorrent/config:/config
+      - /mnt/nas/downloads:/downloads
+      - /mnt/nas/downloads2:/downloads2
+    restart: unless-stopped
+
+#################
+# JELLYFIN
+#################
+
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+    devices:
+      - /dev/dri:/dev/dri
+    group_add:
+      - "44"
+      - "992"
+    environment:
+      - JELLYFIN_FFmpeg__probesize=50M
+      - JELLYFIN_FFmpeg__analyzeduration=50M
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /media/arr/jellyfin/config:/config
+      - /media/arr/jellyfin/config/cache:/cache
+      - /mnt/nas/media/Shows:/data/tvshows
+      - /mnt/nas/media2/Shows2:/data/tvshows2
+      - /mnt/nas/media/Movies:/data/movies
+      - /mnt/nas/media2/Movies2:/data/movies2
+      - /mnt/nas/media/Anime:/data/anime
+      - /mnt/nas/media2/Anime2:/data/anime2
+      - /media/arr/jellyfin/config/cache/transcodes:/transcodes
+    ports:
+      - 8096:8096
+      - 8920:8920
+      - 7359:7359/udp
+      - 1900:1900/udp
+    restart: unless-stopped
+
+#################
+# GLUETUN
+#################
+  gluetun:
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8 
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/dri:/dev/dri
+    group_add:
+      - "44"
+      - "992"
+    ports:
+      - 7878:7878 #radarr
+      - 8989:8989 #sonarr
+      - 9696:9696 #prowlarr
+      - 8080:8080 #qbittorrent
+      - 6881:6881 #qbittorrent
+      - 6881:6881/udp #qbittorrent
+      - 6868:6868 #profilarr
+    environment:
+      - VPN_SERVICE_PROVIDER=nordvpn
+      - VPN_TYPE=openvpn
+      - OPENVPN_PROTOCOL=tcp
+      - OPENVPN_USER=${NORDVPN_USER}
+      - OPENVPN_PASSWORD=${NORDVPN_PASSWORD}
+      - SERVER_COUNTRIES=united states
+    restart: unless-stopped
+
+#################
+# JELLYSEERR
+#################
+
+  jellyseerr:
+    image: ghcr.io/fallenbagel/jellyseerr:latest
+    init: true
+    container_name: jellyseerr
+    environment:
+      - LOG_LEVEL=debug
+      - TZ=America/New_York
+      - PORT=5055
+    ports:
+      - 5055:5055
+    volumes:
+      - /media/arr/jellyseerr/config:/app/config
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/status || exit 1
+      start_period: 20s
+      timeout: 3s
+      interval: 15s
+      retries: 3
+    restart: unless-stopped
+
+#################
+# PROFILARR
+#################
+
+  profilarr:
+    image: santiagosayshey/profilarr:latest
+    container_name: profilarr
+    network_mode: "service:gluetun"
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    volumes:
+      - /media/arr/profilarr/config:/config
+    environment:
+      - TZ=UTC
+    restart: unless-stopped
+
+#################
+# NGINX PROXY MANAGER
+#################
+
+  nginx-proxy-manager:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: nginx-proxy-manager
+    ports:
+      - "80:80"
+      - "443:443"
+      - "81:81"
+    volumes:
+      - npm_data:/data
+      - npm_letsencrypt:/etc/letsencrypt
+    restart: unless-stopped
+
+#################
+# NOTIFIARR
+#################
+
+  notifiarr:
+    image: golift/notifiarr
+    container_name: notifiarr
+    hostname: notifiarr
+    ports:
+      - "5454:5454"
+    volumes:
+      - /media/arr/notifiarr/config:/config
+      - /var/run/utmp:/var/run/utmp
+      - /etc/machine-id:/etc/machine-id
+    restart: unless-stopped
+
+#################
+# ERSATZTV
+#################
+
+  ersatztv:
+    image: ghcr.io/ersatztv/ersatztv
+    container_name: ersatztv
+    devices:
+      - /dev/dri:/dev/dri
+    group_add:
+      - "44"
+      - "992"
+    environment:
+      - TZ=America/New_York
+# UNCOMMENT THESE LINES TO ENABLE NVIDIA GPU PASSTHROUGH
+      #- NVIDIA_VISIBLE_DEVICES=all
+      #- NVIDIA_DRIVER_CAPABILITIES=all
+    #deploy:
+    #  resources:
+    #    reservations:
+    #      devices:
+    #        - driver: nvidia
+    #          count: 1
+    #          capabilities: [gpu]
+    ports:
+      - "8409:8409"
+    volumes:
+      - /media/arr/ersatztv/config:/config
+      - /mnt/nas/media/Movies:/data/movies:rw
+      - /mnt/nas/media2/Movies2:/data/movies2:rw
+      - /mnt/nas/media/Shows:/data/tv:rw
+      - /mnt/nas/media2/Shows2:/data/tv2:rw
+      - /mnt/nas/media/anime:/data/anime:rw
+      - /mnt/nas/media2/anime2:/data/anime2:rw
+    tmpfs:
+      - /transcode
+    restart: unless-stopped
+
+#################
+# HOMARR
+#################
+
+  homarr:
+    image: ghcr.io/homarr-labs/homarr:latest
+    container_name: homarr
+    environment:
+      - SECRET_ENCRYPTION_KEY=${HOMARR_SECRET_KEY}
+    ports:
+      - "7575:7575"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /media/arr/homarr/appdata:/appdata
+    restart: unless-stopped
+
+#################
+# BAZARR
+#################
+
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /media/arr/bazarr/config:/config
+      - /mnt/nas/media/Movies:/movies #optional
+      - /mnt/nas/media2/Movies2:/movies2 #optional
+      - /mnt/nas/media/Shows:/tv #optional
+      - /mnt/nas/media2/Shows2:/tv2 
+      - /mnt/nas/media/Anime:/data/anime
+      - /mnt/nas/media2/Anime2:/data/anime2
+    ports:
+      - 6767:6767
+    restart: unless-stopped
+################
+# FLARESOLVERR
+################
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=info
+      - LOG_HTML=false
+      - CAPTCHA_SOLVER=none
+      - TZ=America/New_York
+    ports:
+      - 8191:8191
+    restart: unless-stopped
+
+volumes:
+  npm_data:
+  npm_letsencrypt:
