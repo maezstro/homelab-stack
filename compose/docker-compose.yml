@@ -313,6 +313,19 @@ services:
       - 6767:6767
     restart: unless-stopped
 
+#################
+# UPTIME KUMA
+#################
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:latest
+    container_name: uptime-kuma
+    volumes:
+      - /media/arr/uptime-kuma/config:/app/data
+    ports:
+      - "3001:3001"
+    restart: unless-stopped
+
 volumes:
   npm_data:
   npm_letsencrypt:
