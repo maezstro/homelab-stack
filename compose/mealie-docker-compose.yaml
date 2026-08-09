@@ -18,7 +18,7 @@ services:
       PUID: 1000
       PGID: 1000
       TZ: UTC
-      BASE_URL: https://mealie.kaijuvault.net
+      BASE_URL: https://mealie.yourdomain.com
       DEFAULT_GROUP: Home
       DEFAULT_HOUSEHOLD: House of Kaiju
       API_PORT: 9000
