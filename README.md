@@ -20,6 +20,7 @@ downloads, a reverse proxy, and a recipe manager.
 - **Nginx Proxy Manager** - reverse proxy + SSL for exposed services
 - **FlareSolverr** - Cloudflare bypass proxy for indexers
 - **Mealie** - self-hosted recipe manager (separate compose file)
+- **Uptime Kuma** - service monitoring with alerting when something goes down
 
 ## Architecture notes
 
