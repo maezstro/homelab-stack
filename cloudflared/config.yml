@@ -1,0 +1,85 @@
+tunnel: TUNNEL_ID_PLACEHOLDER
+credentials-file: /etc/cloudflared/TUNNEL_ID_PLACEHOLDER.json
+
+ingress:
+  - hostname: vault.kaijuvault.net
+    service: https://localhost:443
+    originRequest:
+      noTLSVerify: true
+      originServerName: vault.kaijuvault.net
+  - hostname: obico.kaijuvault.net
+    service: https://localhost:443
+    originRequest:
+      noTLSVerify: true
+      originServerName: obico.kaijuvault.net
+  - hostname: jf.kaijuvault.net
+    service: https://localhost:443
+    originRequest:
+      noTLSVerify: true
+      originServerName: jf.kaijuvault.net
+  - hostname: klipper.kaijuvault.net
+    service: https://localhost:443
+    originRequest:
+      noTLSVerify: true
+      originServerName: klipper.kaijuvault.net
+  - hostname: mealie.kaijuvault.net
+    service: https://localhost:443
+    originRequest:
+      noTLSVerify: true
+      originServerName: mealie.kaijuvault.net
+  - hostname: nginx.kaijuvault.net
+    service: https://localhost:443
+    originRequest:
+      noTLSVerify: true
+      originServerName: nginx.kaijuvault.net
+  - hostname: notifiarr.kaijuvault.net
+    service: https://localhost:443
+    originRequest:
+      noTLSVerify: true
+      originServerName: notifiarr.kaijuvault.net
+  - hostname: portainer.kaijuvault.net
+    service: https://localhost:443
+    originRequest:
+      noTLSVerify: true
+      originServerName: portainer.kaijuvault.net
+  - hostname: profilarr.kaijuvault.net
+    service: https://localhost:443
+    originRequest:
+      noTLSVerify: true
+      originServerName: profilarr.kaijuvault.net
+  - hostname: prowlarr.kaijuvault.net
+    service: https://localhost:443
+    originRequest:
+      noTLSVerify: true
+      originServerName: prowlarr.kaijuvault.net
+  - hostname: radarr.kaijuvault.net
+    service: https://localhost:443
+    originRequest:
+      noTLSVerify: true
+      originServerName: radarr.kaijuvault.net
+  - hostname: sonarr.kaijuvault.net
+    service: https://localhost:443
+    originRequest:
+      noTLSVerify: true
+      originServerName: sonarr.kaijuvault.net
+  - hostname: torrent.kaijuvault.net
+    service: https://localhost:443
+    originRequest:
+      noTLSVerify: true
+      originServerName: torrent.kaijuvault.net
+  - hostname: request.kaijuvault.net
+    service: https://localhost:443
+    originRequest:
+      noTLSVerify: true
+      originServerName: request.kaijuvault.net
+  - hostname: bazarr.kaijuvault.net
+    service: https://localhost:443
+    originRequest:
+      noTLSVerify: true
+      originServerName: bazarr.kaijuvault.net
+  - hostname: ersatztv.kaijuvault.net
+    service: https://localhost:443
+    originRequest:
+      noTLSVerify: true
+      originServerName: ersatztv.kaijuvault.net
+  - service: http_status:404
