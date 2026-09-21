@@ -44,7 +44,6 @@ services:
       - /mnt/user/appdata/sonarr:/config
       - /mnt/user/data/media/tv:/tv
       - /mnt/user/data/torrents:/downloads
-      - /mnt/user/data/media/anime:/anime
     restart: unless-stopped
 
 #################
@@ -120,6 +119,24 @@ services:
       - 1900:1900/udp
     restart: unless-stopped
 
+#################
+# SONARR-ANIME
+#################
+
+  sonarr-anime:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr-anime
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /mnt/user/appdata/sonarr-anime:/config
+      - /mnt/user/data/media/anime:/anime
+      - /mnt/user/data/torrents:/downloads
+    ports:
+      - "8990:8989"
+    restart: unless-stopped
 #################
 # GLUETUN
 #################
@@ -202,6 +219,10 @@ services:
   nginx-proxy-manager:
     image: jc21/nginx-proxy-manager:latest
     container_name: nginx-proxy-manager
+    networks:
+      default:
+        aliases:
+          - npm
     ports:
       - "80:80"
       - "443:443"
