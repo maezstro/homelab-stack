@@ -196,23 +196,6 @@ services:
     restart: unless-stopped
 
 #################
-# PROFILARR
-#################
-
-  profilarr:
-    image: santiagosayshey/profilarr:latest
-    container_name: profilarr
-    network_mode: "service:gluetun"
-    depends_on:
-      gluetun:
-        condition: service_healthy
-    volumes:
-      - /mnt/user/appdata/Profilarr:/config
-    environment:
-      - TZ=UTC
-    restart: unless-stopped
-
-#################
 # NGINX PROXY MANAGER
 #################
 
