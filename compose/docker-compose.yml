@@ -162,7 +162,6 @@ services:
       - 8080:8080 #qbittorrent
       - 6881:6881 #qbittorrent
       - 6881:6881/udp #qbittorrent
-      - 6868:6868 #profilarr
     environment:
       - VPN_SERVICE_PROVIDER=nordvpn
       - VPN_TYPE=wireguard
