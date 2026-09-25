@@ -88,6 +88,23 @@ services:
     restart: unless-stopped
 
 #################
+# CROSS-SEED
+#################
+
+  cross-seed:
+    image: ghcr.io/cross-seed/cross-seed:6
+    container_name: cross-seed
+    user: "1000:1000"
+    command: daemon
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    volumes:
+      - /mnt/user/appdata/cross-seed:/config
+      - /mnt/user/data/torrents:/downloads
+    restart: unless-stopped
+
+#################
 # JELLYFIN
 #################
 
