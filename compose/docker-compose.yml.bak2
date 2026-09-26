@@ -41,7 +41,8 @@ services:
       - TZ=Etc/UTC
     volumes:
       - /mnt/user/appdata/sonarr:/config
-      - /mnt/user/data:/data
+      - /mnt/user/data/media/tv:/tv
+      - /mnt/user/data/torrents:/downloads
     restart: unless-stopped
 
 #################
@@ -147,7 +148,8 @@ services:
       - TZ=Etc/UTC
     volumes:
       - /mnt/user/appdata/sonarr-anime:/config
-      - /mnt/user/data:/data
+      - /mnt/user/data/media/anime:/anime
+      - /mnt/user/data/torrents:/downloads
     ports:
       - "8990:8989"
     restart: unless-stopped
@@ -189,7 +191,7 @@ services:
 #################
 
   jellyseerr:
-    image: ghcr.io/seerr-team/seerr:latest
+    image: ghcr.io/fallenbagel/jellyseerr:latest
     init: true
     container_name: jellyseerr
     environment:
@@ -206,24 +208,6 @@ services:
       timeout: 3s
       interval: 15s
       retries: 3
-    restart: unless-stopped
-
-#################
-#WIZARR
-#################
-
-  wizarr:
-    image: ghcr.io/wizarrrr/wizarr:latest
-    container_name: wizarr
-    ports:
-      - 5690:5690
-    volumes:
-      - /mnt/user/appdata/wizarr:/data
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - DISABLE_BUILTIN_AUTH=false
-      - TZ=America/New_York
     restart: unless-stopped
 
 #################
@@ -282,18 +266,20 @@ services:
     restart: unless-stopped
 
 #################
-# GLANCE
+# HOMARR
 #################
 
-  glance:
-    image: glanceapp/glance
-    container_name: glance
-    restart: unless-stopped
-    volumes:
-      - /mnt/user/appdata/glance/config:/app/config
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+  homarr:
+    image: ghcr.io/homarr-labs/homarr:latest
+    container_name: homarr
+    environment:
+      - SECRET_ENCRYPTION_KEY=${HOMARR_SECRET_KEY}
     ports:
-      - 8282:8080
+      - "7575:7575"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /mnt/user/appdata/homarr:/appdata
+    restart: unless-stopped
 
 #################
 # BAZARR
@@ -308,7 +294,9 @@ services:
       - TZ=Etc/UTC
     volumes:
       - /mnt/user/appdata/bazarr:/config
-      - /mnt/user/data:/data
+      - /mnt/user/data/media/movies:/movies #optional
+      - /mnt/user/data/media/tv:/tv #optional
+      - /mnt/user/data/media/anime:/data/anime
     ports:
       - 6767:6767
     restart: unless-stopped
