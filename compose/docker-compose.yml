@@ -21,8 +21,7 @@ services:
       - "992"
     volumes:
       - /mnt/user/appdata/radarr:/config
-      - /mnt/user/data/media/movies:/movies
-      - /mnt/user/data/torrents:/downloads
+      - /mnt/user/data:/data
     restart: unless-stopped
 
 #################
@@ -42,8 +41,7 @@ services:
       - TZ=Etc/UTC
     volumes:
       - /mnt/user/appdata/sonarr:/config
-      - /mnt/user/data/media/tv:/tv
-      - /mnt/user/data/torrents:/downloads
+      - /mnt/user/data:/data
     restart: unless-stopped
 
 #################
@@ -149,8 +147,7 @@ services:
       - TZ=Etc/UTC
     volumes:
       - /mnt/user/appdata/sonarr-anime:/config
-      - /mnt/user/data/media/anime:/anime
-      - /mnt/user/data/torrents:/downloads
+      - /mnt/user/data:/data
     ports:
       - "8990:8989"
     restart: unless-stopped
@@ -192,7 +189,7 @@ services:
 #################
 
   jellyseerr:
-    image: ghcr.io/fallenbagel/jellyseerr:latest
+    image: ghcr.io/seerr-team/seerr:latest
     init: true
     container_name: jellyseerr
     environment:
@@ -267,20 +264,18 @@ services:
     restart: unless-stopped
 
 #################
-# HOMARR
+# GLANCE
 #################
 
-  homarr:
-    image: ghcr.io/homarr-labs/homarr:latest
-    container_name: homarr
-    environment:
-      - SECRET_ENCRYPTION_KEY=${HOMARR_SECRET_KEY}
-    ports:
-      - "7575:7575"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /mnt/user/appdata/homarr:/appdata
+  glance:
+    image: glanceapp/glance
+    container_name: glance
     restart: unless-stopped
+    volumes:
+      - /mnt/user/appdata/glance/config:/app/config
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - 8282:8080
 
 #################
 # BAZARR
@@ -295,9 +290,7 @@ services:
       - TZ=Etc/UTC
     volumes:
       - /mnt/user/appdata/bazarr:/config
-      - /mnt/user/data/media/movies:/movies #optional
-      - /mnt/user/data/media/tv:/tv #optional
-      - /mnt/user/data/media/anime:/data/anime
+      - /mnt/user/data:/data
     ports:
       - 6767:6767
     restart: unless-stopped
