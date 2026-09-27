@@ -227,6 +227,26 @@ services:
     restart: unless-stopped
 
 #################
+#STREAMYSTATS
+#################
+
+  streamystats:
+    image: ghcr.io/fredrikburmester/streamystats-aio:latest
+    container_name: streamystats
+    ports:
+      - 3000:3000
+    volumes:
+      - /mnt/user/appdata/streamystats/postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${STREAMYSTATS_DB_PASSWORD}
+      - POSTGRES_DB=streamystats
+      - DATABASE_URL=postgresql://postgres:${STREAMYSTATS_DB_PASSWORD}@localhost:5432/streamystats
+      - SESSION_SECRET=${STREAMYSTATS_SESSION_SECRET}
+      - NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=${STREAMYSTATS_ACTIONS_KEY}
+      - TZ=America/New_York
+    restart: unless-stopped
+#################
 # NGINX PROXY MANAGER
 #################
 
