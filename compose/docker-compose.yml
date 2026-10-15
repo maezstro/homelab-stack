@@ -131,7 +131,7 @@ services:
       - 8096:8096
       - 8920:8920
       - 7359:7359/udp
-      - 1900:1900/udp
+      
     restart: unless-stopped
 
 #################
@@ -265,40 +265,23 @@ services:
       - /mnt/user/appdata/npm:/data
       - npm_letsencrypt:/etc/letsencrypt
     restart: unless-stopped
+################
+# NOSTALGIA TV
+################
 
-#################
-# ERSATZTV
-#################
-
-  ersatztv:
-    image: ghcr.io/ersatztv/ersatztv
-    container_name: ersatztv
-    devices:
-      - /dev/dri:/dev/dri
-    group_add:
-      - "44"
-      - "992"
+  nostalgiatv:
+    image: purestream711/nostalgiatv-server:latest
+    container_name: nostalgiatv-server
+    ports:
+      - "19850:19850"
+    volumes:
+      - /mnt/user/appdata/nostalgiatv/data:/app/data
+      - /mnt/user/appdata/nostalgiatv/config:/app/config
+      - /mnt/user/appdata/nostalgiatv/logos:/app/logos
     environment:
       - TZ=America/New_York
-# UNCOMMENT THESE LINES TO ENABLE NVIDIA GPU PASSTHROUGH
-      #- NVIDIA_VISIBLE_DEVICES=all
-      #- NVIDIA_DRIVER_CAPABILITIES=all
-    #deploy:
-    #  resources:
-    #    reservations:
-    #      devices:
-    #        - driver: nvidia
-    #          count: 1
-    #          capabilities: [gpu]
-    ports:
-      - "8409:8409"
-    volumes:
-      - /mnt/user/appdata/ersatztv:/config
-      - /mnt/user/data/media/movies:/data/movies:rw
-      - /mnt/user/data/media/tv:/data/tv:rw
-      - /mnt/user/data/media/anime:/data/anime:rw
-    tmpfs:
-      - /transcode
+      - PUID=1000
+      - PGID=1000
     restart: unless-stopped
 
 #################
@@ -309,9 +292,16 @@ services:
     image: glanceapp/glance
     container_name: glance
     restart: unless-stopped
+    environment:
+      - SONARR_API_KEY=${SONARR_API_KEY}
+      - SONARR_ANIME_API_KEY=${SONARR_ANIME_API_KEY}
+      - SEERR_API_KEY=${SEERR_API_KEY}
     volumes:
       - /mnt/user/appdata/glance/config:/app/config
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /mnt/cache:/mnt/cache:ro
+      - /mnt/disk1:/mnt/disk1:ro
+      - /mnt/disk2:/mnt/disk2:ro
     ports:
       - 8282:8080
 
