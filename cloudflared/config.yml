@@ -38,4 +38,6 @@ ingress:
     service: http://npm:80
   - hostname: stats.kaijuvault.net
     service: http://npm:80
+  - hostname: budget.kaijuvault.net
+    service: http://npm:80
   - service: http_status:404
