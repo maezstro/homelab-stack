@@ -226,26 +226,7 @@ services:
       - TZ=America/New_York
     restart: unless-stopped
 
-#################
-#STREAMYSTATS
-#################
 
-  streamystats:
-    image: ghcr.io/fredrikburmester/streamystats-aio:latest
-    container_name: streamystats
-    ports:
-      - 3000:3000
-    volumes:
-      - /mnt/user/appdata/streamystats/postgres:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=${STREAMYSTATS_DB_PASSWORD}
-      - POSTGRES_DB=streamystats
-      - DATABASE_URL=postgresql://postgres:${STREAMYSTATS_DB_PASSWORD}@localhost:5432/streamystats
-      - SESSION_SECRET=${STREAMYSTATS_SESSION_SECRET}
-      - NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=${STREAMYSTATS_ACTIONS_KEY}
-      - TZ=America/New_York
-    restart: unless-stopped
 #################
 # NGINX PROXY MANAGER
 #################
@@ -284,26 +265,6 @@ services:
       - PGID=1000
     restart: unless-stopped
 
-#################
-# GLANCE
-#################
-
-  glance:
-    image: glanceapp/glance
-    container_name: glance
-    restart: unless-stopped
-    environment:
-      - SONARR_API_KEY=${SONARR_API_KEY}
-      - SONARR_ANIME_API_KEY=${SONARR_ANIME_API_KEY}
-      - SEERR_API_KEY=${SEERR_API_KEY}
-    volumes:
-      - /mnt/user/appdata/glance/config:/app/config
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /mnt/cache:/mnt/cache:ro
-      - /mnt/disk1:/mnt/disk1:ro
-      - /mnt/disk2:/mnt/disk2:ro
-    ports:
-      - 8282:8080
 
 #################
 # BAZARR
@@ -335,18 +296,6 @@ services:
       - /mnt/user/appdata/cloudflared:/etc/cloudflared
     restart: unless-stopped
 
-#################
-# UPTIME KUMA
-#################
-
-  uptime-kuma:
-    image: louislam/uptime-kuma:latest
-    container_name: uptime-kuma
-    volumes:
-      - /mnt/user/appdata/uptime-kuma:/app/data
-    ports:
-      - "3001:3001"
-    restart: unless-stopped
 
 #################
 # PORTAINER
