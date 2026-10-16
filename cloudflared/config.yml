@@ -40,4 +40,8 @@ ingress:
     service: http://npm:80
   - hostname: budget.kaijuvault.net
     service: http://npm:80
+  - hostname: books.kaijuvault.net
+    service: http://npm:80
+  - hostname: proxmox.kaijuvault.net
+    service: http://npm:80
   - service: http_status:404
