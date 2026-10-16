@@ -296,6 +296,25 @@ services:
       - /mnt/user/appdata/cloudflared:/etc/cloudflared
     restart: unless-stopped
 
+################
+# AUDIOBOOKSHELF
+################
+
+
+  audiobookshelf:
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    container_name: audiobookshelf
+    ports:
+      - "13378:80"
+    volumes:
+      - /mnt/user/data/media/audiobooks:/audiobooks
+      - /mnt/user/data/media/podcasts:/podcasts
+      - /mnt/user/appdata/audiobookshelf/config:/config
+      - /mnt/user/appdata/audiobookshelf/metadata:/metadata
+    environment:
+      - TZ=America/New_York
+    restart: unless-stopped
+
 
 #################
 # PORTAINER
