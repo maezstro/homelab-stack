@@ -10,8 +10,6 @@ ingress:
     service: http://npm:80
   - hostname: nginx.kaijuvault.net
     service: http://npm:80
-  - hostname: portainer.kaijuvault.net
-    service: http://npm:80
   - hostname: profilarr.kaijuvault.net
     service: http://npm:80
   - hostname: prowlarr.kaijuvault.net
