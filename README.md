@@ -1,95 +1,53 @@
 # ServerChan Homelab Stack
 
-A self-hosted media automation stack running on Docker Compose, with VPN-routed
-downloads, a reverse proxy, and a recipe manager.
+Docker Compose setup for an Unraid server (Intel N100): VPN-routed torrent automation, a Jellyfin media server, and a Cloudflare Tunnel + Nginx Proxy Manager front door. Split into several small stacks instead of one big file.
 
-## Services
+## Layout
 
-- **Gluetun** - VPN gateway (NordVPN/OpenVPN) that routes qBittorrent, Sonarr,
-  Radarr, Prowlarr, and Profilarr traffic through the VPN
-- **qBittorrent** - torrent client
-- **Sonarr / Radarr** - TV and movie library automation
-- **Prowlarr** - indexer manager for the *arr apps
-- **Profilarr** - quality profile sync for Sonarr/Radarr
-- **Bazarr** - subtitle automation
-- **Jellyfin** - media server
-- **Jellyseerr** - media request UI for Jellyfin
-- **ErsatzTV** - custom "live TV" channels from your library
-- **Homarr** - dashboard for the stack
-- **Notifiarr** - notifications for the *arr apps
-- **Nginx Proxy Manager** - reverse proxy + SSL for exposed services
-- **FlareSolverr** - Cloudflare bypass proxy for indexers
-- **Mealie** - self-hosted recipe manager (separate compose file)
-- **Uptime Kuma** - service monitoring with alerting when something goes down
+| Folder | Contents |
+|---|---|
+| `compose/` | Infrastructure: cloudflared and Nginx Proxy Manager. Creates the shared `compose_default` network. |
+| `cloudflared/` | Tunnel `config.yml` (tunnel ID replaced with a placeholder) |
+| `torrent-automation/` | Gluetun, qBittorrent, Prowlarr, Sonarr, sonarr-anime, Radarr, Bazarr, cross-seed, autobrr, qbit_manage, Profilarr |
+| `media-server-stack/` | Jellyfin, Seerr, Wizarr, Audiobookshelf, NostalgiaTV |
+| `actual/` | Actual Budget |
+| `scripts/` | Helper scripts |
 
-## Architecture notes
-
-- Media is stored on two NAS shares mounted via CIFS/SMB, split across
-  `/mnt/nas/media` and `/mnt/nas/media2`
-- Downloading services (qBittorrent, Sonarr, Radarr, Prowlarr, Profilarr) share
-  Gluetun's network namespace so all their traffic is VPN-routed
-- Nginx Proxy Manager handles reverse proxy + certs for exposed services
+Not in this repo: Immich (its own compose project), and monitoring services (Pi-hole, Uptime Kuma, Glance), which run on a separate mini PC.
 
 ## Setup
 
-1. Copy `.env.example` to `.env` and fill in real values:
+1. In each stack folder, copy `.env.example` to `.env` and fill in real values. `.env` files are git-ignored.
+2. Start the infrastructure stack first, since it creates the network the others join:
 
 ```
-cp .env.example .env
+cd compose && docker compose up -d
 ```
 
-2. Review `compose/docker-compose.yml` and adjust volume paths to match your
-   own NAS/storage layout
-3. Bring up the main stack:
+3. Start the rest, one folder at a time:
 
 ```
-docker compose -f compose/docker-compose.yml up -d
+cd torrent-automation && docker compose up -d
+cd media-server-stack && docker compose up -d
 ```
 
-4. Bring up Mealie separately:
+To change a service, edit that stack's compose file and run `docker compose up -d` again. Only containers whose settings changed get recreated.
 
-```
-docker compose -f compose/mealie-docker-compose.yaml up -d
-```
-
+Don't run `docker compose down` in `compose/`. The other stacks attach to its network.
 
 ## Configuration notes
 
-A few things about this setup you won't figure out just from staring at the compose file:
-
-- **Two NAS mounts, not one**: My media's split across two separate NAS shares
-  (`/mnt/nas/media` and `/mnt/nas/media2`), each with its own Movies/Shows/Anime
-  folders. Anything that touches media (Sonarr, Radarr, Jellyfin, Bazarr,
-  ErsatzTV) mounts both and treats them as separate libraries. If you're just
-  running one NAS/drive, feel free to drop the "2" mounts and simplify — this
-  split is a "me" problem, not a "you" problem.
-
-- **Everything routes through Gluetun**: qBittorrent, Sonarr, Radarr, Prowlarr,
-  and Profilarr all share Gluetun's network via `network_mode: "service:gluetun"`
-  instead of exposing their own ports. That means Gluetun's `ports:` section is
-  what actually opens things up to the outside — if you add another service
-  that needs to go through the VPN, its ports go there, not under the service
-  itself. Easy thing to forget and then wonder why you can't reach a new app.
-
-- **CIFS mount settings actually matter**: NAS shares are mounted with `hard`
-  (not `soft`) in `/etc/fstab`. Learned this one the hard way — `soft` mounts
-  were throwing `EAGAIN` errors in qBittorrent every time the NAS had even a
-  tiny network hiccup. `noserverino` is set too, since this NAS doesn't give
-  out consistent inode numbers on its own.
-
-- **Jellyfin needed a nudge**: Bumped `JELLYFIN_FFmpeg__probesize` and
-  `analyzeduration` up to 50M. Without this, playback took forever to start
-  because ffmpeg's default probing settings are way too conservative for a
-  library sitting on network storage.
+- **Single data share:** everything lives under one `/mnt/user/data` share, with `torrents/` and `media/{movies,tv,anime,audiobooks,podcasts}`. The arr apps mount the whole share as `/data`, qBittorrent and cross-seed mount `torrents/` as `/downloads`. One filesystem path means hardlinks work, so seeding doesn't cost extra disk space.
+- **VPN-routed apps:** qBittorrent, Prowlarr, Sonarr, sonarr-anime and Radarr share Gluetun's network via `network_mode: service:gluetun`. Their ports are published on the `gluetun` service, and other containers reach them at `gluetun:<port>`. Gluetun's `FIREWALL_INPUT_PORTS` must list every one of those ports.
+- **WireGuard key:** Gluetun uses NordVPN over WireGuard. The private key comes from the "manual setup" section of the NordVPN dashboard, not the access token (the token silently fails). It lives in `.env` as `WIREGUARD_PRIVATE_KEY`.
+- **Jellyfin transcoding:** Intel Quick Sync via `/dev/dri`.
+- **Seerr + Jellyfin:** Seerr needs `EnableLegacyAuthorization=true` in Jellyfin's `system.xml` to connect.
+- **Remote access:** a Cloudflare Tunnel points every hostname at Nginx Proxy Manager, which routes by hostname.
 
 ## Backups
 
-A nightly cron job backs up all *arr configs, compose files, Nginx Proxy
-Manager's database/certs, and Mealie data, with 14-day retention. See
-`scripts/` for the backup script.
+Unraid's Appdata Backup plugin saves app configs nightly. A daily flash-drive backup and a nightly rclone sync to Backblaze B2 run through the User Scripts plugin.
 
 ## Notes
 
-This is a personal homelab setup shared for reference. Volume paths, network
-config, and hardware acceleration settings (`/dev/dri` for QuickSync) are
-specific to my hardware and will need adjusting for yours.
+Personal setup shared for reference. Paths, domains and hardware settings are specific to my machine.
