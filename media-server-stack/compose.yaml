@@ -1,0 +1,98 @@
+networks:
+  compose_default:
+    external: true
+    name: compose_default
+
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+    devices:
+      - /dev/dri:/dev/dri
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+      - JELLYFIN_FFmpeg__analyzeduration=50M
+      - JELLYFIN_FFmpeg__probesize=50M
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
+    ports:
+      - 7359:7359/udp
+      - 8096:8096/tcp
+      - 8920:8920/tcp
+    networks:
+      - compose_default
+    volumes:
+      - /mnt/user/appdata/jellyfin:/config
+      - /mnt/user/appdata/jellyfin-cache:/cache
+      - /mnt/user/appdata/jellyfin-cache/transcodes:/transcodes
+      - /mnt/user/data/media/anime:/data/anime
+      - /mnt/user/data/media/movies:/data/movies
+      - /mnt/user/data/media/tv:/data/tvshows
+    restart: unless-stopped
+
+  nostalgiatv-server:
+    image: purestream711/nostalgiatv-server:latest
+    container_name: nostalgiatv-server
+    command:
+      - uvicorn
+      - app.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "19850"
+      - --proxy-headers
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    ports:
+      - 19850:19850/tcp
+    networks:
+      - compose_default
+    volumes:
+      - /mnt/user/appdata/nostalgiatv-server:/config
+    restart: unless-stopped
+
+  jellyseerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    container_name: jellyseerr
+    environment:
+      - PORT=5055
+      - LOG_LEVEL=debug
+      - TZ=America/New_York
+    ports:
+      - 5055:5055/tcp
+    networks:
+      - compose_default
+    volumes:
+      - /mnt/user/appdata/jellyseerr:/app/config
+    restart: unless-stopped
+
+  wizarr:
+    image: ghcr.io/wizarrrr/wizarr:latest
+    container_name: wizarr
+    ports:
+      - 5690:5690/tcp
+    networks:
+      - compose_default
+    volumes:
+      - /mnt/user/appdata/wizarr:/data
+    restart: unless-stopped
+
+  audiobookshelf:
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    container_name: audiobookshelf
+    environment:
+      - TZ=America/New_York
+    ports:
+      - 13378:80/tcp
+    networks:
+      - compose_default
+    volumes:
+      - /mnt/user/appdata/audiobookshelf/config:/config
+      - /mnt/user/appdata/audiobookshelf/metadata:/metadata
+      - /mnt/user/data/media/audiobooks:/audiobooks
+      - /mnt/user/data/media/podcasts:/podcasts
+    restart: unless-stopped

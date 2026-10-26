@@ -1,0 +1,184 @@
+networks:
+  compose_default:
+    external: true
+    name: compose_default
+services:
+  gluetun:
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/dri:/dev/dri
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    environment:
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      - SERVER_COUNTRIES=united states
+      - VPN_SERVICE_PROVIDER=nordvpn
+      - VPN_INTERFACE=tun0
+      - FIREWALL_INPUT_PORTS=7878,8989,8990,9696,8080,6881,6868
+      - FIREWALL_OUTBOUND_SUBNETS=192.168.0.0/24
+    ports:
+      - 8080:8080/tcp # qBittorrent Web UI
+      - 6881:6881/tcp # Torrenting traffic
+      - 6881:6881/udp
+      - 9696:9696/tcp # Prowlarr
+      - 8989:8989/tcp # Sonarr
+      - 7878:7878/tcp # Radarr
+      - 8990:8990/tcp # sonarr-anime (adjust port if needed)
+    networks:
+      - compose_default
+    restart: unless-stopped
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    network_mode: service:gluetun
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+      - WEBUI_PORT=8080
+    volumes:
+      - /mnt/user/appdata/qbittorrent:/config
+      - /mnt/user/data/torrents:/downloads
+    depends_on:
+      - gluetun
+    restart: unless-stopped
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    network_mode: service:gluetun
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - /mnt/user/appdata/prowlarr:/config
+    depends_on:
+      - gluetun
+    restart: unless-stopped
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    network_mode: service:gluetun
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - /mnt/user/appdata/sonarr:/config
+      - /mnt/user/data:/data
+    depends_on:
+      - gluetun
+    restart: unless-stopped
+
+  sonarr-anime:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr-anime
+    network_mode: service:gluetun
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - /mnt/user/appdata/sonarr-anime:/config
+      - /mnt/user/data:/data
+    depends_on:
+      - gluetun
+    restart: unless-stopped
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    network_mode: service:gluetun
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - /mnt/user/appdata/radarr:/config
+      - /mnt/user/data:/data
+    depends_on:
+      - gluetun
+    restart: unless-stopped
+
+  cross-seed:
+    image: ghcr.io/cross-seed/cross-seed:6
+    container_name: cross-seed
+    command:
+      - daemon
+    environment:
+      - CONFIG_DIR=/config
+      - DOCKER_ENV=true
+    networks:
+      - compose_default
+    volumes:
+      - /mnt/user/appdata/cross-seed:/config
+      - /mnt/user/data/torrents:/downloads
+    restart: unless-stopped
+
+  autobrr:
+    image: ghcr.io/autobrr/autobrr:latest
+    container_name: autobrr
+    environment:
+      - TZ=America/New_York
+    ports:
+      - 7474:7474/tcp
+    networks:
+      - compose_default
+    user: 99:100
+    volumes:
+      - /mnt/user/appdata/autobrr:/config
+    restart: unless-stopped
+
+  qbit_manage:
+    image: ghcr.io/stuffanthings/qbit_manage:develop
+    container_name: qbit_manage
+    environment:
+      - TZ=America/New_York
+    networks:
+      - compose_default
+    volumes:
+      - /mnt/user/appdata/qbit_manage:/config
+      - /mnt/user/data/torrents:/data
+    restart: unless-stopped
+
+  Profilarr:
+    image: ghcr.io/dictionarry-hub/profilarr:latest
+    container_name: Profilarr
+    environment:
+      - PGID=100
+      - PUID=99
+      - TZ=America/New_York
+      - PORT=6868
+      - HOST=0.0.0.0
+      - APP_BASE_PATH=/config
+    ports:
+      - 6868:6868/tcp
+    networks:
+      - compose_default
+    volumes:
+      - /mnt/user/appdata/Profilarr:/config
+    restart: unless-stopped
+
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    ports:
+      - 6767:6767/tcp
+    networks:
+      - compose_default
+    volumes:
+      - /mnt/user/appdata/bazarr:/config
+      - /mnt/user/data:/data
+    restart: unless-stopped
